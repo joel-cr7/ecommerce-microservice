@@ -1,0 +1,17 @@
+spring.application.name: config-server
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/joel-cr7/test-config-server
+          username: joel-cr7
+          password: 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
+          default-label: main
+
+
+server:
+  port: 8888
+
+

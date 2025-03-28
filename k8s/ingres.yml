@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress
+  labels:
+    name: myingress
+  annotations:
+    kubernetes.io/ingres.class: "gce"         # specify the loadbalancer (here its using GCP native loadbalancer, so it will be created in GCP)
+    kubernetes.io/ingres.allow-http: "true"
+spec:
+  rules:
+  # - host: <something.com>           here we can specify the host if we have, so this will go to the loadbalancer, here we dont have host so we work with ip of loadbalancer by default
+  - http:
+      paths:
+      - path: "/"             # mention the path
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway     # kubernetes service name
+            port: 
+              number: 80          # port where the service is listening
+      
+      - path: "/zipkin"
+        pathType: Prefix
+        backend:
+          service:
+            name: zipkin
+            port:
+              number: 9411
+
+
+          

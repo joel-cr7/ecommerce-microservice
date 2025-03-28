@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: joelcr7/ecommerce-api-gateway
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: k8s
+        resources:
+          limits:
+            memory: "400Mi"
+            cpu: "200m"
+          requests:
+            memory: "200Mi"
+            cpu: "100m"
+        ports:
+        - containerPort: 8080
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 300    # wait for 300 sec initially after deployment of pod
+          periodSeconds: 20       # after initial 300 sec past, check every 20 secs
+          timeoutSeconds: 20      # max time service can take to return response, if exceeds then considered failed
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+spec:
+  # type: LoadBalancer      # create service of type load-balancer
+  selector:
+    app: api-gateway
+  ports:
+  - port: 80
+    targetPort: 8080

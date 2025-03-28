@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipkin
+spec:
+  selector:
+    matchLabels:
+      app: zipkin
+  template:
+    metadata:
+      labels:
+        app: zipkin
+    spec:
+      containers:
+      - name: zipkin
+        image: openzipkin/zipkin
+        resources:
+          limits:
+            memory: "400Mi"
+            cpu: "100m"
+          requests:
+            memory: "200Mi"
+            cpu: "50m"
+        ports:
+        - containerPort: 9411
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9411
+          initialDelaySeconds: 300    # wait for 300 sec initially after deployment of pod
+          periodSeconds: 20       # after initial 300 sec past, check every 20 secs
+          timeoutSeconds: 20      # max time service can take to return response, if exceeds then considered failed
+
+---
+
+# Service to connect to above zipkin pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin
+spec:
+  selector:
+    app: zipkin
+  ports:
+  - port: 9411
+    targetPort: 9411

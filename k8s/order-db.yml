@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order-db
+spec:
+  selector:
+    matchLabels:
+      app: order-db
+  serviceName: order-db-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: order-db
+    spec:
+      containers:
+      - name: order-db
+        image: postgres:16
+        resources:
+          limits:           # here specify max required
+            memory: "200Mi"
+            cpu: "200m"
+          requests:           # here specify minimum required
+            memory: "100Mi" 
+            cpu: "100m"
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: ORDER_DB_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: ORDER_DB_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: ORDER_DB_NAME
+          - name: PGDATA
+            valueFrom:                # get value from config map
+              configMapKeyRef:
+                name: my-config
+                key: PG_DATA          # this value specifies inside the mount space where we want to store the data (mount path is below) 
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data   # volume mount path
+  
+  # Dynamic provision would happen and the PV of the below type would be created and mounted to this stateful set
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: "standard-rwo"
+      volumeMode: Filesystem
+
+
+---
+
+# Create a headless service, this is required to connect directly to above created pod and not do any loadbalancing as this is 
+# stateful set
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-db-service
+spec:
+  clusterIP: None     # to make headless service
+  selector:
+    app: order-db       # need to be same as above template -> metadata -> label
+  ports:
+  - port: 5432
+    targetPort: 5432
