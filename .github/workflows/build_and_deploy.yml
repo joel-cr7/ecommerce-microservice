@@ -34,7 +34,7 @@ jobs:
     steps:
       # Step1: Checkout the repository (clones the GitHub repo)
       - name: Checkout code
-        uses: action/checkout@v3     # we can use various actions (like we have github repo similarly we have github actions build and published by developers), we can use them
+        uses: actions/checkout@v3     # we can use various actions (like we have github repo similarly we have github actions build and published by developers), we can use them
 
       # Step2: Setup java
       - name: Setup Java 21
@@ -61,7 +61,7 @@ jobs:
     needs: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: action/checkout@master
+      - uses: actions/checkout@master
 
       - name: kubectl - Google cloud GKE cluster
         uses: ameydev/gke-kubectl-action@master     # all below env variables are documented in this github repo for the github actions
